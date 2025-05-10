@@ -148,6 +148,8 @@
             transform: rotateY(180deg);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         .envelope-seal {
@@ -206,6 +208,29 @@
             line-height: 1.6;
             color: #333;
             position: relative;
+            /* Mejoras para scrolling */
+            -webkit-overflow-scrolling: touch; /* Para iOS */
+            scrollbar-width: thin; /* Para Firefox */
+            scrollbar-color: #ff3385 #ffcce0; /* Para Firefox */
+        }
+        
+        /* Estilo de la barra de desplazamiento para Chrome, Edge y Safari */
+        .letter-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .letter-content::-webkit-scrollbar-track {
+            background: #ffcce0;
+            border-radius: 10px;
+        }
+        
+        .letter-content::-webkit-scrollbar-thumb {
+            background: #ff3385;
+            border-radius: 10px;
+        }
+        
+        .letter-content::-webkit-scrollbar-thumb:hover {
+            background: #ff0066;
         }
         
         .letter-content p {
@@ -425,6 +450,42 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
+        
+        /* Mejoras responsivas para dispositivos móviles */
+        @media (max-width: 767px) {
+            .card-scene {
+                height: 450px; /* Un poco más alto para dispositivos móviles */
+            }
+            
+            .envelope-back {
+                padding: 10px;
+            }
+            
+            .letter-content {
+                max-height: 350px; /* Asegurar espacio suficiente para scroll */
+                padding-right: 12px; /* Espacio para la barra de desplazamiento */
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
+            
+            /* Indicador visual de scroll */
+            .scroll-indicator {
+                position: absolute;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                color: #ff3385;
+                font-size: 12px;
+                animation: bounce 1.5s infinite;
+                opacity: 0.7;
+            }
+        }
     </style>
 </head>
 <body>
@@ -459,6 +520,7 @@
                         <p>Y sobre todo, gracias por seguir siendo mi madre. Con nuestras risas, nuestros choques y todo lo demás… aquí seguimos. Y eso, para mí, ya es una razón para celebrar.</p>
                         
                         <div class="signature">Te quiero mucho, mamá. Feliz día.</div>
+                        <div class="scroll-indicator" id="scroll-indicator">↓ Desliza para leer más ↓</div>
                     </div>
                 </div>
             </div>
@@ -565,6 +627,29 @@
             }
         }
         
+        // Verifica si el contenido necesita scroll y muestra/oculta el indicador
+        function checkScrollIndicator() {
+            const letterContent = document.getElementById('letter-content');
+            const scrollIndicator = document.getElementById('scroll-indicator');
+            
+            if (scrollIndicator) {
+                if (letterContent.scrollHeight > letterContent.clientHeight) {
+                    scrollIndicator.style.display = 'block';
+                    
+                    // Ocultar el indicador cuando llegue al final del scroll
+                    letterContent.addEventListener('scroll', function() {
+                        if (Math.abs((this.scrollHeight - this.scrollTop) - this.clientHeight) < 10) {
+                            scrollIndicator.style.opacity = '0';
+                        } else {
+                            scrollIndicator.style.opacity = '0.7';
+                        }
+                    });
+                } else {
+                    scrollIndicator.style.display = 'none';
+                }
+            }
+        }
+        
         // Inicializar todo
         window.addEventListener('load', () => {
             createStars();
@@ -588,6 +673,7 @@
                 // Mostrar botón especial después de leer la carta
                 setTimeout(() => {
                     document.getElementById('special-button').classList.add('visible');
+                    checkScrollIndicator(); // Verificar si se necesita indicador de scroll
                 }, 500 + paragraphs.length * 300);
                 
                 // Efecto de corazones
@@ -616,7 +702,7 @@
         });
         
         // Botón de música
-        let audioPlaying = true;
+        let audioPlaying = false;
         let audio;
         
         document.getElementById('music-button').addEventListener('click', function() {
@@ -627,10 +713,15 @@
                 this.innerHTML = '<span>◼</span>';
                 audioPlaying = true;
             } else {
-                audio.pause();
+                if (audio) audio.pause();
                 this.innerHTML = '<span>♫</span>';
                 audioPlaying = false;
             }
+        });
+        
+        // Verificar orientación del dispositivo y ajustar
+        window.addEventListener('resize', function() {
+            checkScrollIndicator();
         });
     </script>
 </body>
